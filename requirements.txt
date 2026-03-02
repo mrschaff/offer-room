@@ -1,0 +1,11 @@
+streamlit
+anthropic
+python-dotenv
+pymupdf
+python-docx
+requests
+beautifulsoup4
+firebase-admin
+stripe
+bcrypt
+cryptography
