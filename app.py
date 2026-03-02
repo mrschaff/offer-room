@@ -62,9 +62,9 @@ TRANSLATIONS: dict[str, dict] = {
         "gate_create": "📝 Create account",
         "gate_login": "🔓 Log in",
         "gate_new": "New to OfferRoom?",
-        "gate_new_desc": "Create a free account to get started. Buy interview credits or add your own Anthropic API key anytime.",
+        "gate_new_desc": "Create a free account to get started. Buy interview credits to use the app.",
         "gate_existing": "Already have an account?",
-        "gate_existing_desc": "Log in to access your interviews, history, and optionally add your own API key.",
+        "gate_existing_desc": "Log in to access your interviews and purchase interview credits.",
         # Auth
         "auth_login": "Log in",
         "auth_signup": "Sign up",
@@ -120,7 +120,7 @@ TRANSLATIONS: dict[str, dict] = {
         "enable_cv": "upload your CV",
         "enable_role": "add a role title",
         "err_cv": "Could not analyse CV: {e}",
-        "err_cv_no_access": "You need your own Anthropic API key or at least 1 interview to analyse a CV.",
+        "err_cv_no_access": "You need at least 1 interview credit to analyze your CV. Buy credits to get started.",
         "err_start": "Could not start interview: {e}",
         "err_match": "Could not score match: {e}",
         "err_eval": "Could not generate evaluation: {e}",
@@ -229,9 +229,9 @@ TRANSLATIONS: dict[str, dict] = {
         "gate_create": "📝 Crear cuenta",
         "gate_login": "🔓 Iniciar sesión",
         "gate_new": "¿Nuevo en OfferRoom?",
-        "gate_new_desc": "Crea una cuenta gratuita para empezar. Compra créditos de entrevista o añade tu propia clave API de Anthropic en cualquier momento.",
+        "gate_new_desc": "Crea una cuenta gratuita para empezar. Compra créditos de entrevista para usar la app.",
         "gate_existing": "¿Ya tienes una cuenta?",
-        "gate_existing_desc": "Inicia sesión para acceder a tus entrevistas, historial y opcionalmente añade tu propia clave API.",
+        "gate_existing_desc": "Inicia sesión para acceder a tus entrevistas y comprar créditos de entrevista.",
         "auth_login": "Iniciar sesión",
         "auth_signup": "Registrarse",
         "auth_email_lbl": "Email",
@@ -284,7 +284,7 @@ TRANSLATIONS: dict[str, dict] = {
         "enable_cv": "sube tu CV",
         "enable_role": "añade un título de puesto",
         "err_cv": "No se pudo analizar el CV: {e}",
-        "err_cv_no_access": "Necesitas tu propia clave de API de Anthropic o al menos 1 entrevista para analizar el CV.",
+        "err_cv_no_access": "Necesitas al menos 1 crédito de entrevista para analizar tu CV. Compra créditos para comenzar.",
         "err_start": "No se pudo iniciar la entrevista: {e}",
         "err_match": "No se pudo calcular la compatibilidad: {e}",
         "err_eval": "No se pudo generar la evaluación: {e}",
@@ -389,9 +389,9 @@ TRANSLATIONS: dict[str, dict] = {
         "gate_create": "📝 Criar conta",
         "gate_login": "🔓 Entrar",
         "gate_new": "Novo no OfferRoom?",
-        "gate_new_desc": "Crie uma conta gratuita para começar. Compre créditos de entrevista ou adicione sua própria chave API da Anthropic a qualquer momento.",
+        "gate_new_desc": "Crie uma conta gratuita para começar. Compre créditos de entrevista para usar o aplicativo.",
         "gate_existing": "Já tem uma conta?",
-        "gate_existing_desc": "Faça login para acessar suas entrevistas, histórico e opcionalmente adicione sua própria chave API.",
+        "gate_existing_desc": "Faça login para acessar suas entrevistas e comprar créditos de entrevista.",
         "auth_login": "Entrar",
         "auth_signup": "Criar conta",
         "auth_email_lbl": "E-mail",
@@ -444,7 +444,7 @@ TRANSLATIONS: dict[str, dict] = {
         "enable_cv": "faça upload do seu CV",
         "enable_role": "adicione um título de cargo",
         "err_cv": "Não foi possível analisar o CV: {e}",
-        "err_cv_no_access": "Você precisa da sua própria chave de API Anthropic ou pelo menos 1 entrevista para analisar o CV.",
+        "err_cv_no_access": "Você precisa de pelo menos 1 crédito de entrevista para analisar seu CV. Compre créditos para começar.",
         "err_start": "Não foi possível iniciar a entrevista: {e}",
         "err_match": "Não foi possível calcular a compatibilidade: {e}",
         "err_eval": "Não foi possível gerar a avaliação: {e}",
@@ -692,7 +692,6 @@ def login_user(email: str, password: str) -> tuple[bool, str]:
             "uid": data.get("uid", ""),
             "email": email,
             "paid_interviews": int(interviews),
-            "api_key": _decrypt(data.get("api_key", "")),
         }
         return True, ""
     except Exception:
@@ -2404,8 +2403,7 @@ def show_interview_view():
 
             # Post-eval usage info for credit users
             user = st.session_state.get("current_user")
-            _has_key = bool(user and user.get("api_key"))
-            if user and not _has_key and not _DEV_MODE:
+            if user and not _DEV_MODE:
                 remaining = user.get("paid_interviews", 0)
                 st.info(t("post_eval_used").format(n=remaining))
                 if remaining <= 2:
@@ -2744,7 +2742,7 @@ def show_setup_view():
                             st.error(t("err_cv_no_access"))
                             _render_buy_options(user["email"])
                         else:
-                            if not has_own_key and not _DEV_MODE:
+                            if not _DEV_MODE:
                                 st.info(
                                     f"📌 **New interview session**\n\n"
                                     f"With this CV you can score against up to 3 roles, "
@@ -2808,7 +2806,7 @@ def show_setup_view():
                                 )
                                 if ok:
                                     st.session_state.saved_cvs = None
-                                if not has_own_key and not _DEV_MODE:
+                                if not _DEV_MODE:
                                     sid = create_interview_session(
                                         user["email"], cv_file.name,
                                         raw_text, analysis,
@@ -2837,17 +2835,33 @@ def show_setup_view():
 
     # ── Company ───────────────────────────────────────────────────────────────
     st.markdown(f'<div class="lbl">{t("lbl_company")}</div>', unsafe_allow_html=True)
+    has_credits = _DEV_MODE or bool(user and user.get("paid_interviews", 0) > 0)
     col_u, col_e = st.columns([5, 1])
     with col_u:
         company_url = st.text_input("url", placeholder=t("ph_company_url"), label_visibility="collapsed")
     with col_e:
-        if st.button(t("btn_evaluate"), disabled=not bool(company_url), use_container_width=True, key="eval_btn"):
+        can_fetch = bool(company_url.strip()) and has_credits
+        if st.button(t("btn_evaluate"), disabled=not can_fetch, use_container_width=True, key="eval_btn"):
+            url = company_url.strip()
+            if not url.startswith(("http://", "https://")):
+                url = f"https://{url}"
             with st.spinner(t("spin_company")):
-                summary = fetch_and_summarize(company_url)
-            if summary:
-                st.session_state.company_text = summary
-                st.session_state.match_result = None
-                st.rerun()
+                try:
+                    summary = fetch_and_summarize(url)
+                    if summary:
+                        st.session_state.company_text = summary
+                        st.session_state.match_result = None
+                        st.rerun()
+                except Exception as e:
+                    err = str(e)
+                    if any(x in err for x in ("No scheme", "Invalid URL", "invalid")):
+                        st.error("❌ Invalid URL — try: https://company.com")
+                    elif any(x in err for x in ("urlopen", "Connection", "timeout", "Name or service")):
+                        st.error("❌ Could not reach that website. Check the URL and try again.")
+                    else:
+                        st.error("❌ Could not fetch company info. Try a different URL.")
+    if company_url.strip() and not has_credits:
+        st.caption("💳 Buy interview credits to fetch company details.")
 
     company_summary = st.text_area(
         "company_summary", placeholder=t("ph_company_text"),
@@ -3145,7 +3159,6 @@ if _DEV_MODE and not st.session_state.current_user:
         "uid": "dev-user",
         "email": "dev@offerroom.com",
         "paid_interviews": 1000,
-        "api_key": "",
     }
 
 # ── Handle Stripe callback ──────────────────────────────────────────────────────
