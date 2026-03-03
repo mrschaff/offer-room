@@ -698,6 +698,27 @@ def login_user(email: str, password: str) -> tuple[bool, str]:
         return False, t("auth_err_unknown")
 
 
+def _load_user_from_session_cookie():
+    """Load user from a session token stored in query params or cookies."""
+    # Check if user email is in query params (from payment redirect)
+    email = st.query_params.get("user_email", "")
+    if email and not st.session_state.get("current_user"):
+        # User was redirected from payment, auto-login
+        credits = get_credits(email)
+        st.session_state.current_user = {
+            "uid": "",
+            "email": email,
+            "paid_interviews": credits,
+        }
+        return True
+
+    # Check session state - if user exists, keep them logged in
+    if st.session_state.get("current_user"):
+        return True
+
+    return False
+
+
 def logout_user():
     for k in [
         "current_user", "interview_active", "interview_messages", "interview_questions",
@@ -3345,6 +3366,9 @@ if _DEV_MODE and not st.session_state.current_user:
 handle_payment_success()
 
 # ── Auth gate ───────────────────────────────────────────────────────────────────
+
+# Try to restore session from previous login
+_load_user_from_session_cookie()
 
 if not st.session_state.current_user:
     if st.session_state.auth_mode:
