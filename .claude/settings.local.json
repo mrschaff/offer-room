@@ -8,7 +8,10 @@
       "Bash(python3 -c \"import bcrypt; print\\(''bcrypt OK''\\)\")",
       "Bash(python3 -c \"import ast; ast.parse\\(open\\(''app.py''\\).read\\(\\)\\); print\\(''syntax OK''\\)\")",
       "Bash(python -m py_compile app.py)",
-      "Bash(python3 -m py_compile app.py)"
+      "Bash(python3 -m py_compile app.py)",
+      "Bash(git add app.py)",
+      "Bash(git commit:*)",
+      "Bash(git push origin main)"
     ]
   }
 }
