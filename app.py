@@ -2856,7 +2856,7 @@ def show_setup_view():
                                                 raw_text, analysis,
                                             )
                                             st.session_state.current_session_id = sid
-                                        st.markdown(f'<div style="background:#f3e8ff;border-left:4px solid #6d28d9;border-radius:6px;padding:0.75rem 1rem;margin:0.5rem 0;color:#4c1d95;font-weight:500;">✓ {t("cv_saved_ok")}</div>', unsafe_allow_html=True)
+                                        st.markdown(f'<div style="background:#f3e8ff;border-left:4px solid #6d28d9;border-radius:6px;padding:0.75rem 1rem;margin:0.5rem 0;color:#4c1d95;font-weight:500;">{t("cv_saved_ok")}</div>', unsafe_allow_html=True)
                                 except Exception as e:
                                     st.error(t("err_cv").format(e=e))
         else:
@@ -2897,7 +2897,7 @@ def show_setup_view():
                                         raw_text, analysis,
                                     )
                                     st.session_state.current_session_id = sid
-                                st.markdown(f'<div style="background:#f3e8ff;border-left:4px solid #6d28d9;border-radius:6px;padding:0.75rem 1rem;margin:0.5rem 0;color:#4c1d95;font-weight:500;">✓ {t("cv_saved_ok")}</div>', unsafe_allow_html=True)
+                                st.markdown(f'<div style="background:#f3e8ff;border-left:4px solid #6d28d9;border-radius:6px;padding:0.75rem 1rem;margin:0.5rem 0;color:#4c1d95;font-weight:500;">{t("cv_saved_ok")}</div>', unsafe_allow_html=True)
                         except Exception as e:
                             st.error(t("err_cv").format(e=e))
 
