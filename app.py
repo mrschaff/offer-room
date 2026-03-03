@@ -1917,10 +1917,10 @@ Generate:
 1. A brief, in-character opening (2–3 sentences, first person). Reflect tone and pressure. Do not ask a question yet.
 2. Exactly 5 interview questions: grounded in persona mindset, calibrated to difficulty, deeply tailored to company context, diverse across dimensions, ordered warm-up to deep.
 
-Return ONLY valid JSON, no markdown fences:
+CRITICAL: Return ONLY a valid JSON object with NO other text, NO markdown, NO explanation. The entire response must be valid JSON only.
 {{"persona_intro": "...", "questions": ["Q1", "Q2", "Q3", "Q4", "Q5"]}}"""
     r = _client().messages.create(
-        model="claude-sonnet-4-6", max_tokens=1500,
+        model="claude-opus-4-5-20251101", max_tokens=1500,
         system=system, messages=[{"role": "user", "content": prompt}],
     )
     return _parse_json(r.content[0].text)
