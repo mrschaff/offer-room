@@ -1396,6 +1396,21 @@ def _stream_safe(gen) -> str:
 # ── Claude API functions ────────────────────────────────────────────────────────
 
 def analyze_cv(cv_text: str) -> dict:
+    if _DEV_MODE:
+        return {
+            "last_5_experiences": [
+                {"title": "Senior Product Manager", "company": "Acme Corp",
+                 "period": "Jan 2022 – Present (2+ yrs)",
+                 "summary": "Led cross-functional team of 8 to ship 3 major features. Grew DAU 40%."},
+                {"title": "Product Manager", "company": "Beta Inc",
+                 "period": "Mar 2019 – Dec 2021 (2 yrs 9 mo)",
+                 "summary": "Owned B2B SaaS roadmap. Reduced churn 15% via retention features."},
+            ],
+            "top_5_skills": ["Product strategy", "Stakeholder management", "Data analysis",
+                             "Roadmap planning", "Go-to-market"],
+            "top_3_weak_areas": ["Technical depth", "International markets", "Hardware/IoT"],
+            "suggested_seniority": "Senior",
+        }
     prompt = f"""Analyze this CV and return ONLY a JSON object — no markdown, no fences, no extra text.
 
 {{
@@ -1426,6 +1441,9 @@ CV:
 
 
 def fetch_and_summarize(url: str) -> str:
+    if _DEV_MODE:
+        return ("[DEV] Acme Corp is a fast-growing B2B SaaS company in the productivity space, "
+                "serving 5,000+ enterprise customers globally. Series B, ~200 employees.")
     try:
         import requests
         from bs4 import BeautifulSoup
@@ -1459,6 +1477,12 @@ def fetch_and_summarize(url: str) -> str:
 
 
 def score_match(cv: dict, role: str, seniority: str, company: str, jd: str) -> dict:
+    if _DEV_MODE:
+        return {
+            "score": 4,
+            "explanation": ("[DEV] Strong match. 4+ years as Product Manager aligns well with "
+                            "the Senior PM role. B2B SaaS and cross-functional leadership directly relevant."),
+        }
     prompt = f"""You are a senior recruiter scoring a CV against a job. Score 1–5:
 
 1 – No match: different industry, role type, and experience level
@@ -1774,6 +1798,20 @@ def _context_block(interviewer, role_title, seniority, company_summary, job_desc
 def generate_interview_setup(cv_analysis, role_title, seniority, company_summary,
                               job_description, interviewer, difficulty, language="en",
                               custom_role: str = "", custom_context: str = "") -> dict:
+    if _DEV_MODE:
+        return {
+            "persona_intro": (
+                f"[DEV – {interviewer}] Great to meet you. I've reviewed your background — "
+                "let's dive right in. I want to understand how you think under pressure."
+            ),
+            "questions": [
+                "Tell me about a product you're most proud of building. What was your specific contribution?",
+                "Walk me through a time you had to kill a feature or project. How did you handle stakeholders?",
+                "How do you decide what to build next when you have 10 good ideas and bandwidth for only 2?",
+                "Describe a situation where engineering pushed back hard on your roadmap. What happened?",
+                "What would you do in your first 90 days in this role?",
+            ],
+        }
     lang_rule = TRANSLATIONS.get(language, TRANSLATIONS["en"]).get("lang_instruction", "")
 
     if custom_role:
@@ -1824,6 +1862,9 @@ Return ONLY valid JSON, no markdown fences:
 
 def _stream_followup(base_question, user_answer, interviewer, difficulty,
                      role_title, seniority, company_summary="", job_description="", language="en"):
+    if _DEV_MODE:
+        yield "[DEV] Interesting — can you give me a specific metric or number to back that up?"
+        return
     lang_rule = TRANSLATIONS.get(language, TRANSLATIONS["en"]).get("lang_instruction", "")
     system = (
         "You are an AI Interview Simulator fully embodying an interviewer persona. "
@@ -1851,6 +1892,9 @@ def _stream_followup(base_question, user_answer, interviewer, difficulty,
 
 
 def _stream_closing(interviewer, role_title, seniority, language="en"):
+    if _DEV_MODE:
+        yield "[DEV] Thank you for your time today. We'll be in touch within the week regarding next steps."
+        return
     p = PERSONAS.get(interviewer, {})
     lang_rule = TRANSLATIONS.get(language, TRANSLATIONS["en"]).get("lang_instruction", "")
     system = (
@@ -1870,6 +1914,31 @@ def _stream_closing(interviewer, role_title, seniority, language="en"):
 
 
 def generate_evaluation(messages, role_title, seniority, interviewer, difficulty, language="en") -> str:
+    if _DEV_MODE:
+        return (
+            "FINAL SCORE: 4.0 / 5\n\n"
+            "Category Breakdown:\n"
+            "- Narrative: 4/5\n"
+            "- Technical Depth: 4/5\n"
+            "- Logical Thinking: 4/5\n\n"
+            "---\n\n"
+            "WHAT WENT WELL\n"
+            "- Structured answers with clear examples\n"
+            "- Demonstrated strategic thinking throughout\n"
+            "- Good communication and concise delivery\n\n"
+            "WHAT NEEDS IMPROVEMENT\n"
+            "- Could add more quantitative evidence\n"
+            "- Technical depth on implementation details could be stronger\n\n"
+            "---\n\n"
+            "HIRE DECISION\n"
+            "Hire\n"
+            "Strong candidate with relevant experience and clear communication skills. "
+            "Would benefit from deeper technical grounding but shows solid product instincts. "
+            "[DEV MODE — static evaluation]\n\n"
+            "---\n\n"
+            "ANSWER IMPROVEMENT SECTION\n"
+            "N/A — DEV MODE, no real answers to evaluate."
+        )
     eval_lang = TRANSLATIONS.get(language, TRANSLATIONS["en"]).get("eval_lang_instruction", "")
     system = (
         "You are switching from Interviewer Mode to Evaluation Mode.\n\n"
@@ -3158,7 +3227,7 @@ if _DEV_MODE and not st.session_state.current_user:
     st.session_state.current_user = {
         "uid": "dev-user",
         "email": "dev@offerroom.com",
-        "paid_interviews": 1000,
+        "paid_interviews": 9999,
     }
 
 # ── Handle Stripe callback ──────────────────────────────────────────────────────
