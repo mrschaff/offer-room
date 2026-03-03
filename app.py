@@ -2052,6 +2052,20 @@ def generate_evaluation(messages, role_title, seniority, interviewer, difficulty
 
 def show_gate_view():
     """Landing page: login / create account."""
+
+    # If user just came back from payment, auto-redirect to app
+    if st.query_params.get("payment_success"):
+        email = st.query_params.get("user_email", "")
+        if email:
+            credits = get_credits(email)
+            st.session_state.current_user = {
+                "uid": "",
+                "email": email,
+                "paid_interviews": credits,
+            }
+            st.query_params.clear()
+            st.rerun()
+
     _, lang_col, _ = st.columns([2, 3, 2])
     with lang_col:
         _lang_selector(key_suffix="_gate")
