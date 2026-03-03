@@ -2305,7 +2305,7 @@ def show_interview_view():
 
     # Context line
     st.markdown(
-        f"**{_iv_emoji} {_iv_name}** &nbsp;·&nbsp; {interviewer} &nbsp;·&nbsp; "
+        f"**{_iv_name}** &nbsp;·&nbsp; {interviewer} &nbsp;·&nbsp; "
         f"{seniority} {role_title} &nbsp;·&nbsp; "
         f"<span style='color:#6b7280;'>{t(f'diff_{difficulty}')}</span>",
         unsafe_allow_html=True,
@@ -2367,15 +2367,18 @@ def show_interview_view():
     for msg in st.session_state.interview_messages:
         if msg["role"] == "assistant":
             with st.chat_message("assistant", avatar=_iv_emoji):
-                st.markdown(f"**{_iv_emoji} {_iv_name} — {interviewer}**")
+                st.markdown(f"**{_iv_name} — {interviewer}**")
                 st.markdown(_safe(_strip_iv_prefix(msg["content"])))
         else:
-            with st.chat_message("user", avatar="🟣"):
-                st.markdown(
-                    f'<div style="background:#f3e8ff;border-radius:8px;'
-                    f'padding:0.55rem 0.8rem;">{_safe(msg["content"])}</div>',
-                    unsafe_allow_html=True,
-                )
+            st.markdown(
+                f'<div style="display:flex;align-items:flex-start;gap:0.65rem;margin:0.85rem 0;">'
+                f'<div style="width:2.4rem;height:2.4rem;border-radius:0.4rem;background:transparent;'
+                f'display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0;">🟣</div>'
+                f'<div style="background:#f3e8ff;border-radius:0.5rem;padding:0.6rem 0.9rem;'
+                f'flex:1;line-height:1.6;color:#1e293b;">{_safe(msg["content"])}</div>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
 
     # Done state
     if stage == "done":
@@ -2668,8 +2671,8 @@ def show_interview_view():
     voice_mode = st.session_state.get("voice_mode", False)
 
     if voice_mode:
-        # Voice mode: show recorder + a visible keyboard button to switch back
-        _c_rec, _c_kb = st.columns([7, 1])
+        # Voice mode: recorder fills the row; keyboard icon sits to the right
+        _c_rec, _c_kb = st.columns([10, 1])
         with _c_kb:
             if st.button("⌨️", key="voice_toggle_btn", help=t("voice_toggle_text")):
                 st.session_state.voice_mode = False
@@ -2687,82 +2690,33 @@ def show_interview_view():
         else:
             st.warning(t("voice_unavailable"))
     else:
-        # Text mode: hidden toggle rendered so JS can find + proxy-click it
-        _, _c_tog = st.columns([20, 1])
-        with _c_tog:
+        # Text mode: chat input + mic button side-by-side (WhatsApp-style)
+        _c_chat, _c_mic = st.columns([11, 1])
+        with _c_chat:
+            if typed := st.chat_input(t("chat_placeholder")):
+                user_input = typed
+        with _c_mic:
             if st.button("🎤", key="voice_toggle_btn", help=t("voice_toggle_mic")):
                 st.session_state.voice_mode = True
                 st.rerun()
 
-        if typed := st.chat_input(t("chat_placeholder")):
-            user_input = typed
-
-        # Inject mic icon into the chat input bar right before the send button
-        import streamlit.components.v1 as _stc_iv
-        _stc_iv.html("""
-<script>
-(function() {
-    function injectMic() {
-        try {
-            var doc = window.parent.document;
-            if (doc.querySelector('#iv-mic-proxy')) return;
-            // Try multiple selectors for the chat input send button
-            var sendBtn = (
-                doc.querySelector('[data-testid="stChatInputSubmitButton"]') ||
-                doc.querySelector('[data-testid="stChatInput"] button') ||
-                doc.querySelector('.stChatInput button')
-            );
-            if (!sendBtn) return;
-            var mic = doc.createElement('button');
-            mic.id = 'iv-mic-proxy';
-            mic.type = 'button';
-            mic.title = 'Switch to voice input';
-            mic.innerHTML = '🎤';
-            mic.style.cssText = (
-                'background:transparent;border:none;cursor:pointer;' +
-                'font-size:1.15rem;padding:0 6px 0 0;opacity:0.55;' +
-                'transition:opacity 0.15s;line-height:1;'
-            );
-            mic.onmouseover = function() { this.style.opacity = '1'; };
-            mic.onmouseout  = function() { this.style.opacity = '0.55'; };
-            mic.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                var allBtns = doc.querySelectorAll('.stButton button');
-                for (var i = 0; i < allBtns.length; i++) {
-                    if ((allBtns[i].innerText || '').trim() === '🎤') {
-                        allBtns[i].click();
-                        return;
-                    }
-                }
-            });
-            sendBtn.parentNode.insertBefore(mic, sendBtn);
-        } catch(e) {}
-    }
-    injectMic();
-    [150, 400, 900, 2000].forEach(function(d) { setTimeout(injectMic, d); });
-    try {
-        new MutationObserver(injectMic)
-            .observe(window.parent.document.body, {childList: true, subtree: true});
-    } catch(e) {}
-})();
-</script>
-""", height=0, scrolling=False)
-
     # ── Process the answer (identical for voice and typed input) ──────────────
     if user_input:
         st.session_state.interview_messages.append({"role": "user", "content": user_input})
-        with st.chat_message("user", avatar="🟣"):
-            st.markdown(
-                f'<div style="background:#f3e8ff;border-radius:8px;'
-                f'padding:0.55rem 0.8rem;">{_safe(user_input)}</div>',
-                unsafe_allow_html=True,
-            )
+        st.markdown(
+            f'<div style="display:flex;align-items:flex-start;gap:0.65rem;margin:0.25rem 0;">'
+            f'<div style="width:2.4rem;height:2.4rem;border-radius:0.4rem;background:#f0f2f6;'
+            f'display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0;">🟣</div>'
+            f'<div style="background:#f3e8ff;border-radius:0.5rem;padding:0.6rem 0.9rem;'
+            f'flex:1;line-height:1.6;color:#1e293b;">{_safe(user_input)}</div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
 
         if stage == "pending_answer":
             base_q = st.session_state.interview_questions[q_num]
             with st.chat_message("assistant", avatar=_iv_emoji):
-                st.markdown(f"**{_iv_emoji} {_iv_name} — {interviewer}**")
+                st.markdown(f"**{_iv_name} — {interviewer}**")
                 followup = _stream_safe(_stream_followup(
                     base_question=base_q, user_answer=user_input,
                     interviewer=interviewer, difficulty=difficulty,
@@ -2780,14 +2734,14 @@ def show_interview_view():
                 next_q = st.session_state.interview_questions[next_q_num]
                 next_msg = f"{t('q_label').format(n=next_q_num + 1, total=total)} {next_q}"
                 with st.chat_message("assistant", avatar=_iv_emoji):
-                    st.markdown(f"**{_iv_emoji} {_iv_name} — {interviewer}**")
+                    st.markdown(f"**{_iv_name} — {interviewer}**")
                     st.markdown(next_msg)
                 st.session_state.interview_messages.append({"role": "assistant", "content": next_msg})
                 st.session_state.interview_q_num = next_q_num
                 st.session_state.interview_stage = "pending_answer"
             else:
                 with st.chat_message("assistant", avatar=_iv_emoji):
-                    st.markdown(f"**{_iv_emoji} {_iv_name} — {interviewer}**")
+                    st.markdown(f"**{_iv_name} — {interviewer}**")
                     closing = _stream_safe(_stream_closing(
                         interviewer=interviewer, role_title=role_title,
                         seniority=seniority, language=lang,
