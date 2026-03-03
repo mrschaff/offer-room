@@ -2725,39 +2725,12 @@ def show_interview_view():
                 st.rerun()
         return
 
-    # ── Input area (voice or text) ────────────────────────────────────────────
+    # ── Input area (text only for now) ────────────────────────────────────────
     user_input = None
-    voice_mode = st.session_state.get("voice_mode", False)
 
-    if voice_mode:
-        # Voice mode: recorder fills the row; keyboard icon sits to the right
-        _c_rec, _c_kb = st.columns([10, 1])
-        with _c_kb:
-            if st.button("⌨️", key="voice_toggle_btn", help=t("voice_toggle_text")):
-                st.session_state.voice_mode = False
-                st.rerun()
-        voice_comp = _get_voice_component()
-        if voice_comp is not None:
-            lang_code = {"en": "en-US", "es": "es-ES", "pt": "pt-BR"}.get(lang, "en-US")
-            transcript = voice_comp(
-                lang=lang_code,
-                key=f"vc_{q_num}_{stage}",
-                default=None,
-            )
-            if transcript:
-                user_input = transcript
-        else:
-            st.warning(t("voice_unavailable"))
-    else:
-        # Text mode: chat input + mic button side-by-side (WhatsApp-style)
-        _c_chat, _c_mic = st.columns([11, 1])
-        with _c_chat:
-            if typed := st.chat_input(t("chat_placeholder")):
-                user_input = typed
-        with _c_mic:
-            if st.button("🎤", key="voice_toggle_btn", help=t("voice_toggle_mic")):
-                st.session_state.voice_mode = True
-                st.rerun()
+    # Text mode: chat input (voice disabled for launch)
+    if typed := st.chat_input(t("chat_placeholder")):
+        user_input = typed
 
     # ── Process the answer (identical for voice and typed input) ──────────────
     if user_input:
