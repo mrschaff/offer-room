@@ -1036,7 +1036,9 @@ def _get_price_id_for_package(package_id: str) -> str:
 
 def create_checkout_session(price_id: str, email: str, credits: int) -> str:
     _stripe_lib.api_key = _s("STRIPE_SECRET_KEY")
-    app_url = _s("APP_URL") or "http://localhost:8501"
+    app_url = _s("APP_URL")
+    if not app_url:
+        app_url = "https://offer-room.streamlit.app"
     session = _stripe_lib.checkout.Session.create(
         payment_method_types=["card"],
         line_items=[{"price": price_id, "quantity": 1}],
