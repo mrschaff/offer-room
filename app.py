@@ -2066,16 +2066,25 @@ def show_gate_view():
 
     # If user just came back from payment, auto-redirect to app
     if st.query_params.get("payment_success"):
+        print(f"DEBUG: payment_success detected in query params")
         email = st.query_params.get("user_email", "")
+        print(f"DEBUG: email from params = {email}")
         if email:
             credits = get_credits(email)
+            print(f"DEBUG: credits from Firebase = {credits}")
             st.session_state.current_user = {
                 "uid": "",
                 "email": email,
                 "paid_interviews": credits,
             }
+            print(f"DEBUG: session_state.current_user set, calling st.rerun()")
             st.query_params.clear()
             st.rerun()
+        else:
+            print(f"DEBUG: email was empty, skipping auto-login")
+    else:
+        print(f"DEBUG: payment_success NOT in query params")
+        print(f"DEBUG: query_params = {dict(st.query_params)}")
 
     _, lang_col, _ = st.columns([2, 3, 2])
     with lang_col:
