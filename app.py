@@ -2064,27 +2064,18 @@ def generate_evaluation(messages, role_title, seniority, interviewer, difficulty
 def show_gate_view():
     """Landing page: login / create account."""
 
-    # If user just came back from payment, auto-redirect to app
-    if st.query_params.get("payment_success"):
-        print(f"DEBUG: payment_success detected in query params")
-        email = st.query_params.get("user_email", "")
-        print(f"DEBUG: email from params = {email}")
-        if email:
-            credits = get_credits(email)
-            print(f"DEBUG: credits from Firebase = {credits}")
-            st.session_state.current_user = {
-                "uid": "",
-                "email": email,
-                "paid_interviews": credits,
-            }
-            print(f"DEBUG: session_state.current_user set, calling st.rerun()")
-            st.query_params.clear()
-            st.rerun()
-        else:
-            print(f"DEBUG: email was empty, skipping auto-login")
-    else:
-        print(f"DEBUG: payment_success NOT in query params")
-        print(f"DEBUG: query_params = {dict(st.query_params)}")
+    # If user just completed payment, auto-login with stored email
+    if st.session_state.get("pending_checkout_email"):
+        email = st.session_state.pending_checkout_email
+        credits = get_credits(email)
+        st.session_state.current_user = {
+            "uid": "",
+            "email": email,
+            "paid_interviews": credits,
+        }
+        st.session_state.pending_checkout_email = None
+        st.session_state.pending_checkout_credits = None
+        st.rerun()
 
     _, lang_col, _ = st.columns([2, 3, 2])
     with lang_col:
@@ -2190,6 +2181,9 @@ def _render_buy_options(user_email: str):
             if price_id and STRIPE_AVAILABLE:
                 with st.spinner("…"):
                     try:
+                        # Store user email in session before checkout
+                        st.session_state.pending_checkout_email = user_email
+                        st.session_state.pending_checkout_credits = n_credits
                         url = create_checkout_session(price_id, user_email, n_credits)
                         st.session_state.checkout_url = url
                         st.rerun()
