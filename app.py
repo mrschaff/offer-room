@@ -1017,10 +1017,21 @@ def get_user_interviews(email: str) -> list:
 # ── Stripe ──────────────────────────────────────────────────────────────────────
 
 CREDIT_PACKAGES = [
-    ("single", "sidebar_buy_1",  1,  "STRIPE_PRICE_SINGLE"),
-    ("5pack",  "sidebar_buy_5",  5,  "STRIPE_PRICE_5PACK"),
-    ("50pack", "sidebar_buy_50", 50, "STRIPE_PRICE_50PACK"),
+    ("single", "sidebar_buy_1",  1),
+    ("5pack",  "sidebar_buy_5",  5),
+    ("50pack", "sidebar_buy_50", 50),
 ]
+
+_PKG_PRICE_KEYS = {
+    "single": "STRIPE_PRICE_SINGLE",
+    "5pack":  "STRIPE_PRICE_5PACK",
+    "50pack": "STRIPE_PRICE_50PACK",
+}
+
+def _get_price_id_for_package(package_id: str) -> str:
+    currency = "BRL"
+    base_key = _PKG_PRICE_KEYS[package_id]
+    return _s(f"{base_key}_{currency}")
 
 
 def create_checkout_session(price_id: str, email: str, credits: int) -> str:
@@ -2116,9 +2127,9 @@ def _render_buy_options(user_email: str):
     """Inline buy buttons + Stripe redirect."""
     st.markdown(f"**{t('buy_title')}**")
     pkg_cols = st.columns(3)
-    for i, (pkg_id, label_key, n_credits, price_key) in enumerate(CREDIT_PACKAGES):
+    for i, (pkg_id, label_key, n_credits) in enumerate(CREDIT_PACKAGES):
         if pkg_cols[i].button(t(label_key), key=f"buy_{pkg_id}_inline", use_container_width=True):
-            price_id = _s(price_key)
+            price_id = _get_price_id_for_package(pkg_id)
             if price_id and STRIPE_AVAILABLE:
                 with st.spinner("…"):
                     try:
