@@ -2026,6 +2026,14 @@ def show_gate_view():
 
 def show_auth_view():
     """Login / signup form."""
+    st.markdown("""
+<style>
+    input { border-color: #d1d5db !important; }
+    input:focus { border-color: #9D00FF !important; box-shadow: 0 0 0 3px rgba(157,0,255,0.1) !important; }
+    button[type="submit"] { background-color: #9D00FF !important; color: white !important; }
+    button[type="submit"]:hover { background-color: #7c3aed !important; }
+</style>
+""", unsafe_allow_html=True)
     back_col, _, flag_col, _ = st.columns([1, 2, 2, 3])
     with back_col:
         if st.button(t("auth_back"), key="auth_back_btn"):
@@ -2702,7 +2710,7 @@ def show_setup_view():
 
     # ── Account bar: single flat row ─────────────────────────────────────────
     # [🇺🇸][🇪🇸][🇧🇷] ··· email · credits  [History][Log out]
-    c_f1, c_f2, c_f3, c_info, c_btn1, c_btn2 = st.columns([1, 1, 1, 3, 1.2, 1.2])
+    c_f1, c_f2, c_f3, c_info, c_btn1, c_btn2 = st.columns([1, 1, 1, 3, 2, 2])
 
     for col, (code, flag) in zip([c_f1, c_f2, c_f3], [("en", "🇺🇸"), ("es", "🇪🇸"), ("pt", "🇧🇷")]):
         active = st.session_state.get("language", "en") == code
@@ -2720,7 +2728,7 @@ def show_setup_view():
         )
     elif user:
         n_left = user.get("paid_interviews", 0)
-        _cr = "#ef4444" if n_left == 0 else "#f97316" if n_left <= 2 else "#6b7280"
+        _cr = "#9D00FF" if n_left == 0 else "#7c3aed" if n_left <= 2 else "#6b7280"
         credits_html = (
             f'<span style="color:{_cr};font-weight:600;">'
             f'{t("acct_credits").format(n=n_left)}</span>'
@@ -2731,10 +2739,10 @@ def show_setup_view():
             f' &nbsp;·&nbsp; {credits_html}</p>',
             unsafe_allow_html=True,
         )
-        if c_btn1.button(t("acct_history"), key="setup_history_btn"):
+        if c_btn1.button(t("acct_history"), key="setup_history_btn", use_container_width=True):
             st.session_state.view = "history"
             st.rerun()
-        if c_btn2.button(t("acct_logout_btn"), key="setup_logout_btn"):
+        if c_btn2.button(t("acct_logout_btn"), key="setup_logout_btn", use_container_width=True):
             logout_user()
             st.rerun()
     st.divider()
