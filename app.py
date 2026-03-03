@@ -1284,14 +1284,25 @@ def _get_voice_component():
 
 # ── Page header helpers ─────────────────────────────────────────────────────────
 
-def _lang_flags(key_suffix: str = ""):
-    """Three flag buttons: 🇺🇸 🇪🇸 🇧🇷."""
-    cols = st.columns([0.5, 0.5, 0.5, 5])
-    for i, (code, flag) in enumerate([("en", "🇺🇸"), ("es", "🇪🇸"), ("pt", "🇧🇷")]):
-        with cols[i]:
-            if st.button(flag, key=f"lang_{code}{key_suffix}", use_container_width=False):
-                st.session_state.language = code
-                st.rerun()
+_LANG_OPTIONS = {"en": "🇺🇸 English", "es": "🇪🇸 Español", "pt": "🇧🇷 Português"}
+
+
+def _lang_selector(key_suffix: str = ""):
+    """Language dropdown selector."""
+    current = st.session_state.get("language", "en")
+    options = list(_LANG_OPTIONS.keys())
+    idx = options.index(current) if current in options else 0
+    selected = st.selectbox(
+        "language",
+        options=options,
+        format_func=lambda c: _LANG_OPTIONS[c],
+        index=idx,
+        label_visibility="collapsed",
+        key=f"lang_sel{key_suffix}",
+    )
+    if selected != current:
+        st.session_state.language = selected
+        st.rerun()
 
 
 def _app_header(back_label: str = "", back_key: str = "", back_action=None):
@@ -1303,7 +1314,7 @@ def _app_header(back_label: str = "", back_key: str = "", back_action=None):
 
     # Column layout: back? | flags×3 | spacer | account
     has_back = bool(back_label and back_action)
-    col_widths = ([1] if has_back else []) + [0.5, 0.5, 0.5, 8, 3]
+    col_widths = ([2] if has_back else []) + [2, 7, 3]
     cols = st.columns(col_widths)
     offset = 0
 
@@ -1313,11 +1324,9 @@ def _app_header(back_label: str = "", back_key: str = "", back_action=None):
             st.rerun()
         offset = 1
 
-    # Language flags
-    for i, (code, flag) in enumerate([("en", "🇺🇸"), ("es", "🇪🇸"), ("pt", "🇧🇷")]):
-        if cols[offset + i].button(flag, key=f"hdr_lang_{code}_{back_key}", use_container_width=False):
-            st.session_state.language = code
-            st.rerun()
+    # Language selector
+    with cols[offset]:
+        _lang_selector(key_suffix=f"_hdr_{back_key}")
 
     # Account info (right side, last col)
     acct_col = cols[-1]
@@ -1990,9 +1999,9 @@ def generate_evaluation(messages, role_title, seniority, interviewer, difficulty
 
 def show_gate_view():
     """Landing page: login / create account."""
-    _, flag_col, _ = st.columns([3, 2, 3])
-    with flag_col:
-        _lang_flags(key_suffix="_gate")
+    _, lang_col, _ = st.columns([2, 3, 2])
+    with lang_col:
+        _lang_selector(key_suffix="_gate")
 
     st.write("")
     st.markdown('<div class="app-title">OfferRoom</div>', unsafe_allow_html=True)
@@ -2030,17 +2039,17 @@ def show_auth_view():
 <style>
     input { border-color: #d1d5db !important; }
     input:focus { border-color: #9D00FF !important; box-shadow: 0 0 0 3px rgba(157,0,255,0.1) !important; }
-    button[type="submit"] { background-color: #9D00FF !important; color: white !important; }
-    button[type="submit"]:hover { background-color: #7c3aed !important; }
+    [data-testid="stFormSubmitButton"] button { background-color: #9D00FF !important; color: white !important; border: none !important; }
+    [data-testid="stFormSubmitButton"] button:hover { background-color: #7c3aed !important; }
 </style>
 """, unsafe_allow_html=True)
-    back_col, _, flag_col, _ = st.columns([1, 2, 2, 3])
+    back_col, _, lang_col = st.columns([2, 3, 2])
     with back_col:
         if st.button(t("auth_back"), key="auth_back_btn"):
             st.session_state.auth_mode = False
             st.rerun()
-    with flag_col:
-        _lang_flags(key_suffix="_auth")
+    with lang_col:
+        _lang_selector(key_suffix="_auth")
 
     st.write("")
     st.markdown('<div class="app-title">OfferRoom</div>', unsafe_allow_html=True)
@@ -2139,18 +2148,13 @@ def show_history_view():
     """Interview history dashboard."""
     user = st.session_state.current_user
 
-    col_back, _, col_flags = st.columns([1, 5, 1])
+    col_back, _, col_lang = st.columns([2, 4, 2])
     with col_back:
         if st.button(t("history_back"), key="hist_back_btn"):
             st.session_state.view = "setup"
             st.rerun()
-    with col_flags:
-        for code, flag in [("en", "🇺🇸"), ("es", "🇪🇸"), ("pt", "🇧🇷")]:
-            active = st.session_state.get("language", "en") == code
-            label = f"**{flag}**" if active else flag
-            if st.button(label, key=f"hist_lang_{code}"):
-                st.session_state.language = code
-                st.rerun()
+    with col_lang:
+        _lang_selector(key_suffix="_hist")
 
     st.divider()
     st.markdown(f"## {t('history_title')}")
@@ -2709,15 +2713,11 @@ def show_setup_view():
     user = st.session_state.get("current_user")
 
     # ── Account bar: single flat row ─────────────────────────────────────────
-    # [🇺🇸][🇪🇸][🇧🇷] ··· email · credits  [History][Log out]
-    c_f1, c_f2, c_f3, c_info, c_btn1, c_btn2 = st.columns([1, 1, 1, 3, 2, 2])
+    # [Language ▾] ··· email · credits  [History][Log out]
+    c_lang, c_info, c_btn1, c_btn2 = st.columns([2, 3, 2, 2])
 
-    for col, (code, flag) in zip([c_f1, c_f2, c_f3], [("en", "🇺🇸"), ("es", "🇪🇸"), ("pt", "🇧🇷")]):
-        active = st.session_state.get("language", "en") == code
-        label = f"**{flag}**" if active else flag
-        if col.button(label, key=f"setup_lang_{code}", use_container_width=True):
-            st.session_state.language = code
-            st.rerun()
+    with c_lang:
+        _lang_selector(key_suffix="_setup")
 
     if _DEV_MODE:
         c_info.markdown(
@@ -3234,38 +3234,6 @@ st.markdown("""
     *[style*="accent-color: rgb(255"] { accent-color: #9D00FF !important; }
 </style>
 """, unsafe_allow_html=True)
-
-# ── Flag button transparency (JS injection) ──────────────────────────────────────
-import streamlit.components.v1 as _stc
-_stc.html("""
-<script>
-(function() {
-    var FLAGS = ['\U0001F1FA\U0001F1F8', '\U0001F1EA\U0001F1F8', '\U0001F1E7\U0001F1F7'];
-    function styleFlags() {
-        try {
-            var btns = window.parent.document.querySelectorAll('.stButton button');
-            btns.forEach(function(b) {
-                if (FLAGS.indexOf((b.innerText || '').trim()) >= 0) {
-                    b.style.setProperty('background', 'transparent', 'important');
-                    b.style.setProperty('border', 'none', 'important');
-                    b.style.setProperty('box-shadow', 'none', 'important');
-                    b.style.setProperty('font-size', '1.6rem', 'important');
-                    b.style.setProperty('padding', '0', 'important');
-                    b.style.setProperty('min-height', 'unset', 'important');
-                    b.style.setProperty('line-height', '1', 'important');
-                }
-            });
-        } catch(e) {}
-    }
-    styleFlags();
-    [100, 300, 800].forEach(function(d) { setTimeout(styleFlags, d); });
-    try {
-        new MutationObserver(styleFlags)
-            .observe(window.parent.document.body, {childList: true, subtree: true});
-    } catch(e) {}
-})();
-</script>
-""", height=0, scrolling=False)
 
 # ── Session state defaults ──────────────────────────────────────────────────────
 
