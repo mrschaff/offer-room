@@ -205,8 +205,8 @@ TRANSLATIONS: dict[str, dict] = {
         "share_message": "I just completed an interview prep with OfferRoom! 🎤 Role: {role} | Interviewer: {interviewer} | Difficulty: {difficulty} | Score: {score}/5 | Ready to ace your next interview? Try OfferRoom free at offerroom.com",
         # Post-interview stats
         "stats_performance": "Your Performance",
-        "stats_strength": "✓ Your strength",
-        "stats_weakness": "⚠️ Work on",
+        "stats_strength": "Your strength",
+        "stats_weakness": "Work on",
         "stats_narrative": "Communication",
         "stats_technical": "Technical Knowledge",
         "stats_logical": "Problem Solving",
@@ -216,9 +216,9 @@ TRANSLATIONS: dict[str, dict] = {
         "difficulty_brutal_desc": "Demanding interviewer. Will stress-test your thinking with edge cases. Expects deep reasoning and won't accept vague answers.",
         # Interview UX
         "interview_timer": "Interview time",
-        "interview_practice_again": "🔄 Practice this role again",
-        "interview_try_different": "➕ Try different role",
-        "interview_incomplete_warning": "⚠️ Interview in progress",
+        "interview_practice_again": "Practice this role again",
+        "interview_try_different": "Try different role",
+        "interview_incomplete_warning": "Interview in progress",
         "interview_resume": "Resume interview",
         "interview_abandon": "Abandon and go back",
         "interview_incomplete_desc": "You have an interview in progress. Going back will abandon it.",
@@ -366,8 +366,8 @@ TRANSLATIONS: dict[str, dict] = {
         "share_message": "¡Acabo de completar una preparación de entrevista con OfferRoom! 🎤 Puesto: {role} | Entrevistador: {interviewer} | Dificultad: {difficulty} | Puntuación: {score}/5 | ¿Listo para brillar en tu próxima entrevista? Prueba OfferRoom gratis en offerroom.com",
         # Post-interview stats
         "stats_performance": "Tu rendimiento",
-        "stats_strength": "✓ Tu fortaleza",
-        "stats_weakness": "⚠️ Trabaja en",
+        "stats_strength": "Tu fortaleza",
+        "stats_weakness": "Trabaja en",
         "stats_narrative": "Comunicación",
         "stats_technical": "Conocimiento técnico",
         "stats_logical": "Resolución de problemas",
@@ -377,9 +377,9 @@ TRANSLATIONS: dict[str, dict] = {
         "difficulty_brutal_desc": "Entrevistador exigente. Pondrá a prueba tu pensamiento con casos extremos. Espera razonamientos profundos.",
         # Interview UX
         "interview_timer": "Tiempo de entrevista",
-        "interview_practice_again": "🔄 Practicar este rol de nuevo",
-        "interview_try_different": "➕ Intentar rol diferente",
-        "interview_incomplete_warning": "⚠️ Entrevista en progreso",
+        "interview_practice_again": "Practicar este rol de nuevo",
+        "interview_try_different": "Intentar rol diferente",
+        "interview_incomplete_warning": "Entrevista en progreso",
         "interview_resume": "Reanudar entrevista",
         "interview_abandon": "Abandonar y volver",
         "interview_incomplete_desc": "Tienes una entrevista en progreso. Volver la abandonará.",
@@ -526,8 +526,8 @@ TRANSLATIONS: dict[str, dict] = {
         "share_message": "Acabei de completar uma preparação de entrevista com OfferRoom! 🎤 Cargo: {role} | Entrevistador: {interviewer} | Dificuldade: {difficulty} | Pontuação: {score}/5 | Pronto para mandar bem na próxima entrevista? Experimente OfferRoom gratuitamente em offerroom.com",
         # Post-interview stats
         "stats_performance": "Seu desempenho",
-        "stats_strength": "✓ Seu ponto forte",
-        "stats_weakness": "⚠️ Trabalhe em",
+        "stats_strength": "Seu ponto forte",
+        "stats_weakness": "Trabalhe em",
         "stats_narrative": "Comunicação",
         "stats_technical": "Conhecimento técnico",
         "stats_logical": "Resolução de problemas",
@@ -537,9 +537,9 @@ TRANSLATIONS: dict[str, dict] = {
         "difficulty_brutal_desc": "Entrevistador exigente. Testará seu pensamento com casos extremos. Espera raciocínios profundos.",
         # Interview UX
         "interview_timer": "Tempo de entrevista",
-        "interview_practice_again": "🔄 Praticar este cargo novamente",
-        "interview_try_different": "➕ Tentar cargo diferente",
-        "interview_incomplete_warning": "⚠️ Entrevista em andamento",
+        "interview_practice_again": "Praticar este cargo novamente",
+        "interview_try_different": "Tentar cargo diferente",
+        "interview_incomplete_warning": "Entrevista em andamento",
         "interview_resume": "Retomar entrevista",
         "interview_abandon": "Abandonar e voltar",
         "interview_incomplete_desc": "Você tem uma entrevista em andamento. Voltar irá abandoná-la.",
@@ -1285,14 +1285,13 @@ def _get_voice_component():
 # ── Page header helpers ─────────────────────────────────────────────────────────
 
 def _lang_flags(key_suffix: str = ""):
-    """Three flag buttons: 🇺🇸 🇪🇸 🇧🇷. key_suffix avoids duplicate widget keys."""
-    cols = st.columns(3)
+    """Three flag buttons: 🇺🇸 🇪🇸 🇧🇷."""
+    cols = st.columns([0.5, 0.5, 0.5, 5])
     for i, (code, flag) in enumerate([("en", "🇺🇸"), ("es", "🇪🇸"), ("pt", "🇧🇷")]):
-        active = st.session_state.get("language", "en") == code
-        label = f"**{flag}**" if active else flag
-        if cols[i].button(label, key=f"lang_{code}{key_suffix}", use_container_width=True):
-            st.session_state.language = code
-            st.rerun()
+        with cols[i]:
+            if st.button(flag, key=f"lang_{code}{key_suffix}", use_container_width=False):
+                st.session_state.language = code
+                st.rerun()
 
 
 def _app_header(back_label: str = "", back_key: str = "", back_action=None):
@@ -1302,9 +1301,9 @@ def _app_header(back_label: str = "", back_key: str = "", back_action=None):
     """
     user = st.session_state.get("current_user")
 
-    # Column layout: back | flags | spacer | account
+    # Column layout: back? | flags×3 | spacer | account
     has_back = bool(back_label and back_action)
-    col_widths = ([1] if has_back else []) + [1, 1, 1, 8, 3]
+    col_widths = ([1] if has_back else []) + [0.5, 0.5, 0.5, 8, 3]
     cols = st.columns(col_widths)
     offset = 0
 
@@ -1315,11 +1314,8 @@ def _app_header(back_label: str = "", back_key: str = "", back_action=None):
         offset = 1
 
     # Language flags
-    lang_cols = cols[offset:offset + 3]
     for i, (code, flag) in enumerate([("en", "🇺🇸"), ("es", "🇪🇸"), ("pt", "🇧🇷")]):
-        active = st.session_state.get("language", "en") == code
-        label = f"**{flag}**" if active else flag
-        if lang_cols[i].button(label, key=f"hdr_lang_{code}_{back_key}", use_container_width=True):
+        if cols[offset + i].button(flag, key=f"hdr_lang_{code}_{back_key}", use_container_width=False):
             st.session_state.language = code
             st.rerun()
 
@@ -2023,7 +2019,8 @@ def show_gate_view():
         st.caption(t("gate_existing_desc"))
 
     if st.session_state.get("payment_message"):
-        st.success(st.session_state.payment_message)
+        _pm = st.session_state.payment_message
+        st.markdown(f'<div style="background:#f3e8ff;border-left:4px solid #6d28d9;border-radius:6px;padding:0.75rem 1rem;margin:0.5rem 0;color:#4c1d95;font-weight:500;">✓ {_pm}</div>', unsafe_allow_html=True)
         st.session_state.payment_message = None
 
 
@@ -2045,11 +2042,10 @@ def show_auth_view():
     with col:
         # Default tab based on how we got here
         default_idx = 0 if st.session_state.get("auth_mode") == "signup" else 1
-        mode = st.radio(
+        mode = st.selectbox(
             "auth_type",
             [t("auth_signup"), t("auth_login")],
             index=default_idx,
-            horizontal=True,
             label_visibility="collapsed",
             key="auth_type_radio",
         )
@@ -2175,13 +2171,11 @@ def show_history_view():
         score = iv.get("final_score", 0)
         pct = score / 5
         if pct >= 0.8:
-            c = "#22c55e"
+            c = "#7c3aed"
         elif pct >= 0.6:
-            c = "#84cc16"
-        elif pct >= 0.4:
-            c = "#eab308"
+            c = "#a78bfa"
         else:
-            c = "#ef4444"
+            c = "#d946ef"
 
         with st.expander(f"{date_str}  ·  {iv.get('role', '—')}  ·  **{score:.1f} / 5**"):
             left, right = st.columns([3, 1])
@@ -2245,8 +2239,8 @@ def show_interview_view():
             st.rerun()
     with col_timer:
         st.markdown(
-            f'<div style="text-align:right;font-weight:600;color:#6b7280;font-size:0.95rem;padding-top:0.4rem;">'
-            f'⏱️ {timer_text}'
+            f'<div style="text-align:right;font-weight:600;color:#9D00FF;font-size:0.95rem;padding-top:0.4rem;">'
+            f'{timer_text}'
             f'</div>',
             unsafe_allow_html=True,
         )
@@ -2321,9 +2315,9 @@ def show_interview_view():
     dot_html = ""
     for i in range(total):
         if i < completed:
-            color, dot = "#2563eb", "●"
+            color, dot = "#7c3aed", "●"
         elif i == q_num and stage != "done":
-            color, dot = "#2563eb", "◉"
+            color, dot = "#9D00FF", "◉"
         else:
             color, dot = "#d1d5db", "●"
         dot_html += f'<span style="font-size:1.1rem;color:{color};margin-right:4px;">{dot}</span>'
@@ -2344,7 +2338,7 @@ def show_interview_view():
 
     # Done state
     if stage == "done":
-        st.success(t("interview_complete"))
+        st.markdown(f'<div style="background:#f3e8ff;border-left:4px solid #6d28d9;border-radius:6px;padding:0.75rem 1rem;margin:0.5rem 0;color:#4c1d95;font-weight:500;">✓ {t("interview_complete")}</div>', unsafe_allow_html=True)
         st.write("")
 
         if st.session_state.interview_evaluation is None:
@@ -2386,7 +2380,7 @@ def show_interview_view():
                 try:
                     score_val = float(score_line.split("/")[0].strip())
                     pct = score_val / 5
-                    bar_color = "#22c55e" if pct >= 0.8 else "#84cc16" if pct >= 0.6 else "#eab308" if pct >= 0.4 else "#ef4444"
+                    bar_color = "#7c3aed" if pct >= 0.8 else "#a78bfa" if pct >= 0.6 else "#d946ef"
                     st.markdown(
                         f'<div style="background:{bar_color}18;border:1.5px solid {bar_color}50;'
                         f'border-radius:12px;padding:1rem 1.5rem;margin-bottom:1rem;">'
@@ -2411,7 +2405,7 @@ def show_interview_view():
                     pass
 
             def _score_color(s):
-                return "#22c55e" if s >= 5 else "#84cc16" if s >= 4 else "#eab308" if s >= 3 else "#f97316" if s >= 2 else "#ef4444"
+                return "#7c3aed" if s >= 4 else "#a78bfa" if s >= 3 else "#d946ef"
 
             if any(v > 0 for v in cat_scores.values()):
                 st.markdown(f"### {t('stats_performance')}")
@@ -2445,20 +2439,20 @@ def show_interview_view():
 
                 sw1, sw2 = st.columns(2)
                 sw1.markdown(
-                    f'<div style="background:#dcfce7;border:1.5px solid #22c55e;'
+                    f'<div style="background:#ede9fe;border:1.5px solid #6d28d9;'
                     f'border-radius:8px;padding:1rem;">'
-                    f'<div style="color:#166534;font-weight:600;margin-bottom:0.4rem;">{t("stats_strength")}</div>'
-                    f'<div style="color:#166534;font-size:0.9rem;">{label_map[best_key]}</div>'
-                    f'<div style="color:#16a34a;font-weight:700;font-size:1.3rem;margin-top:0.4rem;">{cat_scores[best_key]}/5</div>'
+                    f'<div style="color:#4c1d95;font-weight:600;margin-bottom:0.4rem;">{t("stats_strength")}</div>'
+                    f'<div style="color:#4c1d95;font-size:0.9rem;">{label_map[best_key]}</div>'
+                    f'<div style="color:#6d28d9;font-weight:700;font-size:1.3rem;margin-top:0.4rem;">{cat_scores[best_key]}/5</div>'
                     f'</div>',
                     unsafe_allow_html=True,
                 )
                 sw2.markdown(
-                    f'<div style="background:#fee2e2;border:1.5px solid #ef4444;'
+                    f'<div style="background:#f1f5f9;border:1.5px solid #1e293b;'
                     f'border-radius:8px;padding:1rem;">'
-                    f'<div style="color:#991b1b;font-weight:600;margin-bottom:0.4rem;">{t("stats_weakness")}</div>'
-                    f'<div style="color:#991b1b;font-size:0.9rem;">{label_map[worst_key]}</div>'
-                    f'<div style="color:#dc2626;font-weight:700;font-size:1.3rem;margin-top:0.4rem;">{cat_scores[worst_key]}/5</div>'
+                    f'<div style="color:#1e293b;font-weight:600;margin-bottom:0.4rem;">{t("stats_weakness")}</div>'
+                    f'<div style="color:#334155;font-size:0.9rem;">{label_map[worst_key]}</div>'
+                    f'<div style="color:#1e293b;font-weight:700;font-size:1.3rem;margin-top:0.4rem;">{cat_scores[worst_key]}/5</div>'
                     f'</div>',
                     unsafe_allow_html=True,
                 )
@@ -2494,14 +2488,23 @@ def show_interview_view():
             except (ValueError, IndexError):
                 pass
 
-            share_text = t("share_message").format(
-                role=role_title,
-                interviewer=interviewer,
-                difficulty=difficulty,
-                score=_share_score,
+            # Use full "Seniority Role" label; fall back to custom role name if set
+            if st.session_state.get("use_custom_interviewer"):
+                _role_display = st.session_state.get("custom_interviewer_role") or role_title
+            else:
+                _role_display = f"{seniority} {role_title}".strip()
+
+            _app_url = "https://offer-room.streamlit.app"
+            share_text = (
+                f"I just completed an interview prep with OfferRoom! 🎤\n\n"
+                f"Role: {_role_display}\n"
+                f"Interviewer: {interviewer}\n"
+                f"Difficulty: {difficulty}\n"
+                f"Score: {_share_score}/5\n\n"
+                f"Ready to ace your next interview? Try OfferRoom free at {_app_url}"
             )
             _enc  = urllib.parse.quote(share_text, safe="")
-            _eurl = urllib.parse.quote("https://offerroom.com", safe="")
+            _eurl = urllib.parse.quote(_app_url, safe="")
 
             twitter_url  = f"https://twitter.com/intent/tweet?text={_enc}"
             linkedin_url = f"https://www.linkedin.com/sharing/share-offsite/?url={_eurl}"
@@ -2509,11 +2512,11 @@ def show_interview_view():
 
             # Info card
             st.markdown(
-                f'<div style="background:#f3f4f6;border:1.5px solid #e5e7eb;'
+                f'<div style="background:#f3f4f6;border:1.5px solid #9D00FF40;'
                 f'border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1rem;">'
-                f'<div style="font-weight:600;color:#0f1419;margin-bottom:0.75rem;">{t("share_card_title")}</div>'
+                f'<div style="font-weight:600;color:#9D00FF;margin-bottom:0.75rem;">{t("share_card_title")}</div>'
                 f'<div style="font-size:0.9rem;color:#374151;line-height:1.7;">'
-                f'<strong>{t("share_role")}:</strong> {role_title}<br>'
+                f'<strong>{t("share_role")}:</strong> {_role_display}<br>'
                 f'<strong>{t("share_interviewer")}:</strong> {interviewer}<br>'
                 f'<strong>{t("share_score")}:</strong> {_share_score}/5'
                 f'</div>'
@@ -2575,22 +2578,25 @@ def show_interview_view():
         col1, col2 = st.columns(2)
         with col1:
             if st.button(t("interview_practice_again"), use_container_width=True, type="primary", key="practice_again_btn"):
-                # Keep role/CV/company context, just reset interview state
+                # Reset interview state — keep CV/role/company/match so user goes straight to
+                # interviewer+difficulty selection with the same context
                 st.session_state.interview_active = False
                 st.session_state.interview_messages = []
                 st.session_state.interview_questions = []
                 st.session_state.interview_q_num = 0
                 st.session_state.interview_stage = "not_started"
                 st.session_state.interview_evaluation = None
-                st.session_state.match_result = None
                 st.session_state.session_interview_started = False
                 st.session_state.current_session_id = None
                 st.session_state.session_match_count = 0
                 st.session_state.voice_mode = False
+                # Reset interviewer/difficulty so user can pick fresh ones
+                st.session_state.interviewer = ""
+                st.session_state.difficulty = "Realistic"
                 st.rerun()
         with col2:
             if st.button(t("interview_try_different"), use_container_width=True, key="try_different_btn"):
-                # Full reset — back to setup with blank slate
+                # Full reset — blank slate
                 st.session_state.interview_active = False
                 st.session_state.interview_messages = []
                 st.session_state.interview_questions = []
@@ -2600,9 +2606,18 @@ def show_interview_view():
                 st.session_state.match_result = None
                 st.session_state.cv_analysis = None
                 st.session_state.cv_filename = None
+                st.session_state.role_title = ""
+                st.session_state.seniority = "Mid"
+                st.session_state.company_summary = ""
+                st.session_state.job_description = ""
+                st.session_state.interviewer = ""
+                st.session_state.difficulty = "Realistic"
                 st.session_state.session_interview_started = False
                 st.session_state.current_session_id = None
                 st.session_state.session_match_count = 0
+                st.session_state.use_custom_interviewer = False
+                st.session_state.custom_interviewer_role = ""
+                st.session_state.custom_interviewer_context = ""
                 st.session_state.voice_mode = False
                 st.rerun()
         return
@@ -2726,7 +2741,8 @@ def show_setup_view():
 
     # Payment message
     if st.session_state.get("payment_message"):
-        st.success(st.session_state.payment_message)
+        _pm = st.session_state.payment_message
+        st.markdown(f'<div style="background:#f3e8ff;border-left:4px solid #6d28d9;border-radius:6px;padding:0.75rem 1rem;margin:0.5rem 0;color:#4c1d95;font-weight:500;">✓ {_pm}</div>', unsafe_allow_html=True)
         st.session_state.payment_message = None
 
     # ── Header ───────────────────────────────────────────────────────────────
@@ -2771,12 +2787,12 @@ def show_setup_view():
                             )
                             st.session_state.current_session_id = sid
                     has_cache = bool(chosen.get("cv_analysis"))
-                    c_cv, c_del = st.columns([6, 1])
+                    c_cv, c_del = st.columns([5, 1.5])
                     c_cv.caption(
                         t("cv_cached_ok") + f" · {chosen['filename']}"
                         if has_cache else f"✓ {chosen['filename']}"
                     )
-                    if c_del.button(t("cv_delete"), key="del_selected_cv"):
+                    if c_del.button(t("cv_delete"), key="del_selected_cv", use_container_width=True):
                         delete_cv(chosen["id"])
                         if st.session_state.cv_filename == chosen["filename"]:
                             st.session_state.cv_analysis = None
@@ -2791,7 +2807,7 @@ def show_setup_view():
                 if len(saved_cvs) >= _MAX_CVS:
                     st.warning(t("cv_limit_warn"))
                     for cv in saved_cvs:
-                        c1, c2 = st.columns([6, 1])
+                        c1, c2 = st.columns([5, 1.5])
                         c1.caption(cv["filename"])
                         if c2.button(t("cv_delete"), key=f"del_cv_{cv['id']}"):
                             delete_cv(cv["id"])
@@ -2840,7 +2856,7 @@ def show_setup_view():
                                                 raw_text, analysis,
                                             )
                                             st.session_state.current_session_id = sid
-                                        st.success(t("cv_saved_ok"))
+                                        st.markdown(f'<div style="background:#f3e8ff;border-left:4px solid #6d28d9;border-radius:6px;padding:0.75rem 1rem;margin:0.5rem 0;color:#4c1d95;font-weight:500;">✓ {t("cv_saved_ok")}</div>', unsafe_allow_html=True)
                                 except Exception as e:
                                     st.error(t("err_cv").format(e=e))
         else:
@@ -2881,7 +2897,7 @@ def show_setup_view():
                                         raw_text, analysis,
                                     )
                                     st.session_state.current_session_id = sid
-                                st.success(t("cv_saved_ok"))
+                                st.markdown(f'<div style="background:#f3e8ff;border-left:4px solid #6d28d9;border-radius:6px;padding:0.75rem 1rem;margin:0.5rem 0;color:#4c1d95;font-weight:500;">✓ {t("cv_saved_ok")}</div>', unsafe_allow_html=True)
                         except Exception as e:
                             st.error(t("err_cv").format(e=e))
 
@@ -2905,7 +2921,7 @@ def show_setup_view():
     # ── Company ───────────────────────────────────────────────────────────────
     st.markdown(f'<div class="lbl">{t("lbl_company")}</div>', unsafe_allow_html=True)
     has_credits = _DEV_MODE or bool(user and user.get("paid_interviews", 0) > 0)
-    col_u, col_e = st.columns([5, 1])
+    col_u, col_e = st.columns([5, 1.5])
     with col_u:
         company_url = st.text_input("url", placeholder=t("ph_company_url"), label_visibility="collapsed")
     with col_e:
@@ -2977,7 +2993,7 @@ def show_setup_view():
     if st.session_state.match_result:
         r = st.session_state.match_result
         score = r["score"]
-        COLORS = {1: "#ef4444", 2: "#f97316", 3: "#eab308", 4: "#84cc16", 5: "#22c55e"}
+        COLORS = {1: "#d946ef", 2: "#d946ef", 3: "#a78bfa", 4: "#7c3aed", 5: "#7c3aed"}
         c = COLORS[score]
         dots = "".join(
             f'<span style="font-size:1.4rem;color:{c if i <= score else "#e5e7eb"};">●</span>'
@@ -3002,18 +3018,22 @@ def show_setup_view():
         # ── Interviewer selector ──────────────────────────────────────────────
         st.markdown(f'<div class="lbl">{t("lbl_interviewer")}</div>', unsafe_allow_html=True)
 
-        mode_predefined = t("lbl_interviewer")
-        mode_custom = t("custom_role_title")
-        interviewer_mode = st.radio(
-            "interviewer_mode",
-            [mode_predefined, mode_custom],
-            horizontal=True,
+        INTERVIEWERS = {k: v["subtitle"] for k, v in PERSONAS.items()
+                        if k != "Custom Interviewer"}
+        _custom_label = t("custom_role_title")
+        interviewer_options = list(INTERVIEWERS.keys()) + [_custom_label]
+
+        interviewer_choice = st.selectbox(
+            "interviewer",
+            interviewer_options,
+            format_func=lambda k: k if k == _custom_label else f"{k}  —  {INTERVIEWERS[k]}",
             label_visibility="collapsed",
-            key="interviewer_mode_radio",
+            key="interviewer_select",
         )
 
-        if interviewer_mode == mode_custom:
-            st.write("")
+        if interviewer_choice == _custom_label:
+            interviewer = "Custom Interviewer"
+            st.session_state.use_custom_interviewer = True
             custom_role_input = st.text_input(
                 "custom_role_input",
                 placeholder=t("custom_role_ph"),
@@ -3027,23 +3047,10 @@ def show_setup_view():
                 height=80,
                 key="custom_role_ctx",
             )
-            interviewer = "Custom Interviewer"
-            if custom_role_input.strip():
-                st.session_state.custom_interviewer_role = custom_role_input.strip()
-                st.session_state.custom_interviewer_context = custom_context_input.strip()
-                st.session_state.use_custom_interviewer = True
-                st.caption(f"✓ {custom_role_input.strip()}")
-            else:
-                st.session_state.use_custom_interviewer = False
-                st.caption(t("custom_role_placeholder"))
+            st.session_state.custom_interviewer_role = custom_role_input.strip()
+            st.session_state.custom_interviewer_context = custom_context_input.strip()
         else:
-            INTERVIEWERS = {k: v["subtitle"] for k, v in PERSONAS.items()
-                            if k != "Custom Interviewer"}
-            interviewer = st.radio(
-                "interviewer", list(INTERVIEWERS.keys()),
-                format_func=lambda k: f"{k}  —  {INTERVIEWERS[k]}",
-                label_visibility="collapsed",
-            )
+            interviewer = interviewer_choice
             st.session_state.use_custom_interviewer = False
 
         st.write("")
@@ -3061,13 +3068,11 @@ def show_setup_view():
             active = st.session_state.difficulty == lvl
             col.markdown(
                 f'<div style="height:4px;border-radius:2px;'
-                f'background:{"#2563eb" if active else "#e5e7eb"};margin-top:4px;"></div>',
+                f'background:{"#9D00FF" if active else "#e5e7eb"};margin-top:4px;"></div>',
                 unsafe_allow_html=True,
             )
 
         # Difficulty description card
-        _diff_bg   = {"Friendly": "#dbeafe", "Realistic": "#fef3c7", "Brutal": "#fee2e2"}
-        _diff_tc   = {"Friendly": "#1e40af", "Realistic": "#92400e", "Brutal": "#991b1b"}
         _diff_desc = {
             "Friendly":  t("difficulty_friendly_desc"),
             "Realistic": t("difficulty_realistic_desc"),
@@ -3075,12 +3080,9 @@ def show_setup_view():
         }
         _cur = st.session_state.difficulty
         st.markdown(
-            f'<div style="background:{_diff_bg.get(_cur,"#f3f4f6")};'
-            f'border-left:4px solid {_diff_tc.get(_cur,"#374151")};'
-            f'border-radius:4px;padding:0.85rem 1rem;margin-top:0.5rem;">'
-            f'<div style="color:{_diff_tc.get(_cur,"#374151")};font-size:0.9rem;line-height:1.5;">'
-            f'{_diff_desc.get(_cur,"")}</div>'
-            f'</div>',
+            f'<div style="border-left:3px solid #9D00FF;padding:0.75rem 1rem;'
+            f'margin-top:0.5rem;color:#4b5563;font-size:0.9rem;line-height:1.6;">'
+            f'{_diff_desc.get(_cur,"")}</div>',
             unsafe_allow_html=True,
         )
 
@@ -3164,6 +3166,10 @@ st.markdown("""
         font-weight: 800;
         letter-spacing: -1px;
         margin-bottom: 0.25rem;
+        background: linear-gradient(135deg, #000 0%, #9D00FF 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
     .app-subtitle {
         text-align: center;
@@ -3174,7 +3180,7 @@ st.markdown("""
     .lbl {
         font-size: 0.8rem;
         font-weight: 600;
-        color: #374151;
+        color: #9D00FF;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         margin-bottom: 0.15rem;
@@ -3184,8 +3190,74 @@ st.markdown("""
         padding: 1.25rem 1.5rem;
         margin: 0.75rem 0 0 0;
     }
+    button[kind="primary"] { transition: box-shadow 0.2s ease; }
+    button[kind="primary"]:hover { box-shadow: 0 4px 14px rgba(157, 0, 255, 0.25); }
+    [role="radio"] { accent-color: #9D00FF !important; }
+
+    /* ── Global purple overrides ── */
+    .stButton > button {
+        background-color: #9D00FF !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        padding: 0.75rem 1.5rem !important;
+        transition: all 0.2s ease !important;
+        box-shadow: 0 2px 8px rgba(157, 0, 255, 0.15) !important;
+    }
+    .stButton > button:hover {
+        background-color: #7c3aed !important;
+        box-shadow: 0 4px 16px rgba(157, 0, 255, 0.3) !important;
+        transform: translateY(-2px) !important;
+    }
+    .stButton > button:active {
+        background-color: #6d28d9 !important;
+    }
+    [role="radio"]:checked { accent-color: #7c3aed !important; }
+    [type="checkbox"] { accent-color: #9D00FF !important; }
+    [data-baseweb="select"] { --color-primary: #9D00FF !important; }
+    input[type="radio"] {
+        accent-color: #9D00FF !important;
+        width: 18px !important;
+        height: 18px !important;
+        cursor: pointer !important;
+    }
+    input[type="radio"]:checked { accent-color: #7c3aed !important; }
+    *[style*="accent-color: rgb(255"] { accent-color: #9D00FF !important; }
 </style>
 """, unsafe_allow_html=True)
+
+# ── Flag button transparency (JS injection) ──────────────────────────────────────
+import streamlit.components.v1 as _stc
+_stc.html("""
+<script>
+(function() {
+    var FLAGS = ['\U0001F1FA\U0001F1F8', '\U0001F1EA\U0001F1F8', '\U0001F1E7\U0001F1F7'];
+    function styleFlags() {
+        try {
+            var btns = window.parent.document.querySelectorAll('.stButton button');
+            btns.forEach(function(b) {
+                if (FLAGS.indexOf((b.innerText || '').trim()) >= 0) {
+                    b.style.setProperty('background', 'transparent', 'important');
+                    b.style.setProperty('border', 'none', 'important');
+                    b.style.setProperty('box-shadow', 'none', 'important');
+                    b.style.setProperty('font-size', '1.6rem', 'important');
+                    b.style.setProperty('padding', '0', 'important');
+                    b.style.setProperty('min-height', 'unset', 'important');
+                    b.style.setProperty('line-height', '1', 'important');
+                }
+            });
+        } catch(e) {}
+    }
+    styleFlags();
+    [100, 300, 800].forEach(function(d) { setTimeout(styleFlags, d); });
+    try {
+        new MutationObserver(styleFlags)
+            .observe(window.parent.document.body, {childList: true, subtree: true});
+    } catch(e) {}
+})();
+</script>
+""", height=0, scrolling=False)
 
 # ── Session state defaults ──────────────────────────────────────────────────────
 
@@ -3220,6 +3292,11 @@ for k, v in {
 }.items():
     if k not in st.session_state:
         st.session_state[k] = v
+
+# ── Language from URL query param (?lang=en/es/pt) ──────────────────────────────
+_qp_lang = st.query_params.get("lang", "")
+if _qp_lang in ("en", "es", "pt"):
+    st.session_state.language = _qp_lang
 
 # ── Dev mode: auto-login ────────────────────────────────────────────────────────
 
