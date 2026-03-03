@@ -1415,6 +1415,14 @@ def _parse_json(raw: str) -> dict:
     if raw.startswith("```"):
         parts = raw.split("```")
         raw = parts[1].lstrip("json").strip() if len(parts) > 1 else raw
+
+    # Handle case where Claude adds text before/after JSON
+    if not raw.startswith("{"):
+        start = raw.find("{")
+        end = raw.rfind("}")
+        if start != -1 and end != -1:
+            raw = raw[start:end+1]
+
     return json.loads(raw)
 
 
