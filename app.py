@@ -1344,8 +1344,8 @@ def _app_header(back_label: str = "", back_key: str = "", back_action=None):
             f'{t("acct_credits").format(n=n_left)}</span>'
         )
         acct_col.markdown(
-            f'<span style="font-size:0.75rem;color:#6b7280;">{user["email"]}</span>'
-            f' <span style="font-size:0.75rem;">·</span> {cr_html}',
+            f'<p style="text-align:right;font-size:0.75rem;margin:0;line-height:1.5;">'
+            f'<span style="color:#6b7280;">{user["email"]}</span><br>{cr_html}</p>',
             unsafe_allow_html=True,
         )
     st.divider()
@@ -2734,9 +2734,8 @@ def show_setup_view():
             f'{t("acct_credits").format(n=n_left)}</span>'
         )
         c_info.markdown(
-            f'<p style="text-align:right;font-size:0.8rem;margin:0.3rem 0 0;">'
-            f'<span style="color:#6b7280;">{user["email"]}</span>'
-            f' &nbsp;·&nbsp; {credits_html}</p>',
+            f'<p style="text-align:right;font-size:0.8rem;margin:0.3rem 0 0;line-height:1.5;">'
+            f'<span style="color:#6b7280;">{user["email"]}</span><br>{credits_html}</p>',
             unsafe_allow_html=True,
         )
         if c_btn1.button(t("acct_history"), key="setup_history_btn", use_container_width=True):
