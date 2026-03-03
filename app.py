@@ -1312,7 +1312,10 @@ def _get_voice_component():
         with open(os.path.join(tmp_dir, "index.html"), "w", encoding="utf-8") as fh:
             fh.write(_VOICE_COMPONENT_HTML)
         return components.declare_component("voice_recorder", path=tmp_dir)
-    except Exception:
+    except Exception as e:
+        print(f"Voice component load error: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 
