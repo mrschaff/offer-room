@@ -1548,7 +1548,7 @@ PERSONAS: dict[str, dict] = {
             "You test real-world judgment. You have little patience for vague answers."
         ),
     },
-    "Engineer / Developer": {
+    "Software Engineer": {
         "subtitle": "Technical Peer",
         "mindset": (
             "Do they actually understand what they claim? "
@@ -1653,6 +1653,25 @@ PERSONAS: dict[str, dict] = {
         ),
     },
 }
+
+# (emoji, first-name) per interviewer persona — used for humanised chat display
+PERSONA_META: dict[str, tuple] = {
+    "First-Round Recruiter": ("👨", "Mark"),
+    "Hiring Manager":        ("👩", "Anna"),
+    "Software Engineer":     ("👩", "Alyssa"),
+    "Product Specialist":    ("👨", "Nadeem"),
+    "CMO":                   ("👨", "Wilt"),
+    "CFO":                   ("👩", "Mary"),
+    "CTO":                   ("👨", "Andrew"),
+    "CEO":                   ("👩", "Jen"),
+    "Custom Interviewer":    ("👨", "Pete"),
+}
+
+
+def _strip_iv_prefix(text: str) -> str:
+    """Strip [ROLE – Name] prefixes that dev mode or the AI may prepend."""
+    return re.sub(r'^\[[^\]]+\]\s*', '', text)
+
 
 DIFFICULTY_MODULATION: dict[str, dict] = {
     "Friendly": {
@@ -2233,10 +2252,11 @@ def show_interview_view():
         st.session_state.current_session_id = None
         st.session_state.session_match_count = 0
 
-    interviewer = st.session_state.get("interviewer", "")
+    interviewer  = st.session_state.get("interviewer", "")
     role_title   = st.session_state.get("role_title", "")
     seniority    = st.session_state.get("seniority", "")
     difficulty   = st.session_state.get("difficulty", "Realistic")
+    _iv_emoji, _iv_name = PERSONA_META.get(interviewer, ("👤", interviewer))
 
     # Header: back button + timer
     start_time = st.session_state.get("interview_start_time") or time.time()
@@ -2285,7 +2305,8 @@ def show_interview_view():
 
     # Context line
     st.markdown(
-        f"**{interviewer}** &nbsp;·&nbsp; {seniority} {role_title} &nbsp;·&nbsp; "
+        f"**{_iv_emoji} {_iv_name}** &nbsp;·&nbsp; {interviewer} &nbsp;·&nbsp; "
+        f"{seniority} {role_title} &nbsp;·&nbsp; "
         f"<span style='color:#6b7280;'>{t(f'diff_{difficulty}')}</span>",
         unsafe_allow_html=True,
     )
@@ -2344,9 +2365,17 @@ def show_interview_view():
 
     # Chat history
     for msg in st.session_state.interview_messages:
-        avatar = "🧑‍💼" if msg["role"] == "assistant" else "🙋"
-        with st.chat_message(msg["role"], avatar=avatar):
-            st.markdown(_safe(msg["content"]))
+        if msg["role"] == "assistant":
+            with st.chat_message("assistant", avatar=_iv_emoji):
+                st.markdown(f"**{_iv_emoji} {_iv_name} — {interviewer}**")
+                st.markdown(_safe(_strip_iv_prefix(msg["content"])))
+        else:
+            with st.chat_message("user", avatar="🟣"):
+                st.markdown(
+                    f'<div style="background:#f3e8ff;border-radius:8px;'
+                    f'padding:0.55rem 0.8rem;">{_safe(msg["content"])}</div>',
+                    unsafe_allow_html=True,
+                )
 
     # Done state
     if stage == "done":
@@ -2638,20 +2667,16 @@ def show_interview_view():
     user_input = None
     voice_mode = st.session_state.get("voice_mode", False)
 
-    # Toggle button — small, top-right of the input zone
-    c_inp, c_tog = st.columns([8, 1])
-    tog_label = "⌨️" if voice_mode else "🎤"
-    tog_help  = t("voice_toggle_text") if voice_mode else t("voice_toggle_mic")
-    if c_tog.button(tog_label, key="voice_toggle_btn", help=tog_help):
-        st.session_state.voice_mode = not voice_mode
-        st.rerun()
-
     if voice_mode:
-        # Voice recorder component (declare_component with bidirectional comms)
+        # Voice mode: show recorder + a visible keyboard button to switch back
+        _c_rec, _c_kb = st.columns([7, 1])
+        with _c_kb:
+            if st.button("⌨️", key="voice_toggle_btn", help=t("voice_toggle_text")):
+                st.session_state.voice_mode = False
+                st.rerun()
         voice_comp = _get_voice_component()
         if voice_comp is not None:
             lang_code = {"en": "en-US", "es": "es-ES", "pt": "pt-BR"}.get(lang, "en-US")
-            # Key includes q_num + stage so the component resets on every new prompt
             transcript = voice_comp(
                 lang=lang_code,
                 key=f"vc_{q_num}_{stage}",
@@ -2662,18 +2687,82 @@ def show_interview_view():
         else:
             st.warning(t("voice_unavailable"))
     else:
+        # Text mode: hidden toggle rendered so JS can find + proxy-click it
+        _, _c_tog = st.columns([20, 1])
+        with _c_tog:
+            if st.button("🎤", key="voice_toggle_btn", help=t("voice_toggle_mic")):
+                st.session_state.voice_mode = True
+                st.rerun()
+
         if typed := st.chat_input(t("chat_placeholder")):
             user_input = typed
+
+        # Inject mic icon into the chat input bar right before the send button
+        import streamlit.components.v1 as _stc_iv
+        _stc_iv.html("""
+<script>
+(function() {
+    function injectMic() {
+        try {
+            var doc = window.parent.document;
+            if (doc.querySelector('#iv-mic-proxy')) return;
+            // Try multiple selectors for the chat input send button
+            var sendBtn = (
+                doc.querySelector('[data-testid="stChatInputSubmitButton"]') ||
+                doc.querySelector('[data-testid="stChatInput"] button') ||
+                doc.querySelector('.stChatInput button')
+            );
+            if (!sendBtn) return;
+            var mic = doc.createElement('button');
+            mic.id = 'iv-mic-proxy';
+            mic.type = 'button';
+            mic.title = 'Switch to voice input';
+            mic.innerHTML = '🎤';
+            mic.style.cssText = (
+                'background:transparent;border:none;cursor:pointer;' +
+                'font-size:1.15rem;padding:0 6px 0 0;opacity:0.55;' +
+                'transition:opacity 0.15s;line-height:1;'
+            );
+            mic.onmouseover = function() { this.style.opacity = '1'; };
+            mic.onmouseout  = function() { this.style.opacity = '0.55'; };
+            mic.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var allBtns = doc.querySelectorAll('.stButton button');
+                for (var i = 0; i < allBtns.length; i++) {
+                    if ((allBtns[i].innerText || '').trim() === '🎤') {
+                        allBtns[i].click();
+                        return;
+                    }
+                }
+            });
+            sendBtn.parentNode.insertBefore(mic, sendBtn);
+        } catch(e) {}
+    }
+    injectMic();
+    [150, 400, 900, 2000].forEach(function(d) { setTimeout(injectMic, d); });
+    try {
+        new MutationObserver(injectMic)
+            .observe(window.parent.document.body, {childList: true, subtree: true});
+    } catch(e) {}
+})();
+</script>
+""", height=0, scrolling=False)
 
     # ── Process the answer (identical for voice and typed input) ──────────────
     if user_input:
         st.session_state.interview_messages.append({"role": "user", "content": user_input})
-        with st.chat_message("user", avatar="🙋"):
-            st.markdown(user_input)
+        with st.chat_message("user", avatar="🟣"):
+            st.markdown(
+                f'<div style="background:#f3e8ff;border-radius:8px;'
+                f'padding:0.55rem 0.8rem;">{_safe(user_input)}</div>',
+                unsafe_allow_html=True,
+            )
 
         if stage == "pending_answer":
             base_q = st.session_state.interview_questions[q_num]
-            with st.chat_message("assistant", avatar="🧑‍💼"):
+            with st.chat_message("assistant", avatar=_iv_emoji):
+                st.markdown(f"**{_iv_emoji} {_iv_name} — {interviewer}**")
                 followup = _stream_safe(_stream_followup(
                     base_question=base_q, user_answer=user_input,
                     interviewer=interviewer, difficulty=difficulty,
@@ -2690,13 +2779,15 @@ def show_interview_view():
             if next_q_num < total:
                 next_q = st.session_state.interview_questions[next_q_num]
                 next_msg = f"{t('q_label').format(n=next_q_num + 1, total=total)} {next_q}"
-                with st.chat_message("assistant", avatar="🧑‍💼"):
+                with st.chat_message("assistant", avatar=_iv_emoji):
+                    st.markdown(f"**{_iv_emoji} {_iv_name} — {interviewer}**")
                     st.markdown(next_msg)
                 st.session_state.interview_messages.append({"role": "assistant", "content": next_msg})
                 st.session_state.interview_q_num = next_q_num
                 st.session_state.interview_stage = "pending_answer"
             else:
-                with st.chat_message("assistant", avatar="🧑‍💼"):
+                with st.chat_message("assistant", avatar=_iv_emoji):
+                    st.markdown(f"**{_iv_emoji} {_iv_name} — {interviewer}**")
                     closing = _stream_safe(_stream_closing(
                         interviewer=interviewer, role_title=role_title,
                         seniority=seniority, language=lang,
